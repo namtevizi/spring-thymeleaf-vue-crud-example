@@ -5,6 +5,143 @@
 
     <meta charset="UTF-8">
     <title>Users</title>
+    <!-- component template -->
+    <script type="text/x-template" id="grid-template">
+        <div>
+        <form v-on:submit.prevent="postUser">
+            <div class="card mb-auto">
+                <div aria-controls="userForm" aria-expanded="false" class="card-header" data-target="#userForm"
+                     data-toggle="collapse" style="cursor: pointer">
+                    <div class="float-left">New/Edit User</div>
+                    <div class="float-right">+</div>
+                </div>
+                <div class="card card-body collapse" id="userForm">
+                    <div class="form-group row">
+                        <label for="firstName" class="col-sm-4 col-form-label">First Name</label>
+                        <input id="userId" type="hidden" v-model="user_id">
+                        <input class="form-control col-sm-8" id="firstName" placeholder="First Name" type="text"
+                               v-model="user_firstName"/>
+                    </div>
+                    <div class="form-group row">
+                        <label for="lastName" class="col col-sm-4">Last Name</label>
+                        <input class="form-control col-sm-8" id="lastName" placeholder="Last Name" type="text"
+                               v-model="user_lastName"/>
+                    </div>
+                    <div class="form-group row">
+                        <label for="roleName" class="col col-sm-4">Role Name</label>
+                        <select class="form-control col-sm-8" id="roleName" placeholder="Role Name" v-model="user_roleId">
+                            <option disabled value="">Please select a Role</option>
+                            <option :selected="role.id === user_roleId" v-bind:value="role.id" v-for="role in roles">{{
+                                role.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col col-sm-4"></div>
+                        <input class="btn btn-primary col col-sm-8" type="submit" value="Save">
+                    </div>
+                </div>
+            </div>
+        </form>
+    
+        <br><br>
+
+        <table class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              
+              <th @click="sortBy('firstName')"
+                :class="{ active: sortKey == 'firstName' }">
+                First Name
+                <span class="arrow" :class="sortOrders['firstName'] > 0 ? 'asc' : 'dsc'"></span>
+              </th>
+              <th @click="sortBy('lastName')"
+                :class="{ active: sortKey == 'lastName' }">
+                Last Name
+                <span class="arrow" :class="sortOrders['lastName'] > 0 ? 'asc' : 'dsc'"></span>
+              </th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in filteredUsers">
+              <td>{{ user.firstName }}</td>
+              <td>{{ user.lastName }}</td>
+              <td>{{ user.role.name }}</td>
+              <td>
+                <button class="btn btn-primary" v-on:click="editUser(user)">Edit</button>
+                <button class="btn btn-danger" v-on:click="deleteUser(user)">Delete</button>
+            </td>
+            </tr>
+          </tbody>
+        </table>
+
+    </div>
+    </script>
+
+    <style>
+        body {
+  font-family: Helvetica Neue, Arial, sans-serif;
+  font-size: 14px;
+  color: #444;
+}
+
+table {
+  border: 2px solid #42b983;
+  border-radius: 3px;
+  background-color: #fff;
+}
+
+th {
+  background-color: #42b983;
+  color: rgba(255, 255, 255, 0.66);
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+td {
+  background-color: #f9f9f9;
+}
+
+th,
+td {
+  /* min-width: 180px; */
+  padding: 10px 20px;
+}
+
+th.active {
+  color: #fff;
+}
+
+th.active .arrow {
+  opacity: 1;
+}
+
+.arrow {
+  display: inline-block;
+  vertical-align: middle;
+  width: 0;
+  height: 0;
+  margin-left: 5px;
+  opacity: 0.66;
+}
+
+.arrow.asc {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #fff;
+}
+
+.arrow.dsc {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #fff;
+}
+    </style>
 </head>
 <body>
 
@@ -14,89 +151,92 @@
 <br><br>
 
 <div class="container" id="main">
-    <form v-on:submit.prevent="postUser">
-        <div class="card mb-auto">
-            <div aria-controls="userForm" aria-expanded="false" class="card-header" data-target="#userForm"
-                 data-toggle="collapse" style="cursor: pointer">
-                <div class="float-left">New/Edit User</div>
-                <div class="float-right">+</div>
-            </div>
-            <div class="card card-body collapse" id="userForm">
-                <div class="form-group row">
-                    <label for="firstName" class="col-sm-4 col-form-label">First Name</label>
-                    <input id="userId" type="hidden" v-model="user_id">
-                    <input class="form-control col-sm-8" id="firstName" placeholder="First Name" type="text"
-                           v-model="user_firstName"/>
-                </div>
-                <div class="form-group row">
-                    <label for="lastName" class="col col-sm-4">Last Name</label>
-                    <input class="form-control col-sm-8" id="lastName" placeholder="Last Name" type="text"
-                           v-model="user_lastName"/>
-                </div>
-                <div class="form-group row">
-                    <label for="roleName" class="col col-sm-4">Role Name</label>
-                    <select class="form-control col-sm-8" id="roleName" placeholder="Role Name" v-model="user_roleId">
-                        <option disabled value="">Please select a Role</option>
-                        <option :selected="role.id === user_roleId" v-bind:value="role.id" v-for="role in roles">{{
-                            role.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group row">
-                    <div class="col col-sm-4"></div>
-                    <input class="btn btn-primary col col-sm-8" type="submit" value="Save">
-                </div>
-            </div>
-        </div>
+    
+
+    <form id="search">
+      Search <input name="query" v-model="searchQuery" />
     </form>
 
-    <br><br>
+    <br/><br/>
 
-    <table class="table table-striped table-bordered">
-        <thead>
-        <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Role</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="user in users">
-            <td>{{ user.firstName }}</td>
-            <td>{{ user.lastName }}</td>
-            <td>{{ user.role.name }}</td>
-            <td>
-                <button class="btn btn-primary" v-on:click="editUser(user)">Edit</button>
-                <button class="btn btn-danger" v-on:click="deleteUser(user)">Delete</button>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+    <grid-data
+      :columns="sortColumns"
+      :filter-key="searchQuery"
+    >
+    </grid-data>
+  </div>
 
 <!-- Vue imports -->
 <script src="webjars/vue/vue.min.js"></script>
 <script src="webjars/axios/dist/axios.min.js"></script>
+
 <!-- Actual Vue.js script -->
 <script>
-    var app = new Vue({
-        el: '#main',
-        data() {
-            return {
-                user_id: null,
+      // register the grid component
+      Vue.component("grid-data", {
+        template: "#grid-template",
+        props: {
+          
+          columns: Array,
+          filterKey: String
+        },
+        data: function() {
+          var sortOrders = {};
+          this.columns.forEach(function(key) {
+            sortOrders[key] = 1;
+          });
+          return {
+            sortKey: "",
+            sortOrders: sortOrders,
+            users: null,
+            roles: null,
+            user_id: null,
                 user_firstName: null,
                 user_lastName: null,
                 user_roleId: null,
-                users: null,
-                roles: null
-            }
+          };
         },
         mounted() {
             this.getUsers();
         },
+        computed: {
+          filteredUsers: function() {
+            var sortKey = this.sortKey;
+            var filterKey = this.filterKey && this.filterKey.toLowerCase();
+            var order = this.sortOrders[sortKey] || 1;
+            var users = this.users;
+            if (filterKey) {
+                users = users.filter(function(row) {
+                return Object.keys(row).some(function(key) {
+                  return (
+                    String(row[key])
+                      .toLowerCase()
+                      .indexOf(filterKey) > -1
+                  );
+                });
+              });
+            }
+            if (sortKey) {
+                users = users.slice().sort(function(a, b) {
+                a = a[sortKey];
+                b = b[sortKey];
+                return (a === b ? 0 : a > b ? 1 : -1) * order;
+              });
+            }
+            return users;
+          }
+        },
+        filters: {
+          capitalize: function(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+          }
+        },
         methods: {
-            getUsers: function () {
+          sortBy: function(key) {
+            this.sortKey = key;
+            this.sortOrders[key] = this.sortOrders[key] * -1;
+          },
+          getUsers: function () {
                 axios
                     .get("/api/v1/users")
                     .then(response => (this.users = response.data));
@@ -149,6 +289,22 @@
                 await axios
                     .delete("/api/v1/users/" + user.id);
                 this.getUsers();
+            }
+        }
+      });
+
+    var app = new Vue({
+        el: '#main',
+        data() {
+            return {
+                searchQuery: "",
+                sortColumns: ["firstName", "lastName"],
+                user_id: null,
+                user_firstName: null,
+                user_lastName: null,
+                user_roleId: null,
+                users: null,
+                roles: null
             }
         }
     })
